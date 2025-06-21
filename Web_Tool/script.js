@@ -316,27 +316,38 @@ generateNormalCheckbox.addEventListener('change', updatePreviews);
 
 // Main generation
 generateBtn.addEventListener('click', async () => {
-  let json;
-  try { json = JSON.parse(jsonEditor.value); }
-  catch (e) { alert('Invalid JSON'); return; }
+  const originalText = generateBtn.innerHTML;
+  generateBtn.disabled = true;
+  generateBtn.innerHTML = `<span class="button-loader"></span>Preparing...`;
+  try {
+    let json;
+    try { json = JSON.parse(jsonEditor.value); }
+    catch (e) { alert('Invalid JSON'); return; }
 
-  const zip = new JSZip();
-  const selectedCategory = getSelectedCategory();
-  if (!selectedCategory) { alert('Please select a category.'); return; }
-  const root = zip.folder(assetType.value).folder(selectedCategory).folder(assetName.value);
-  const jsonName = assetType.value === 'Decals' ? 'decal.json' : 'surface.json';
-  root.file(jsonName, JSON.stringify(json, null, 2));
+    const zip = new JSZip();
+    const selectedCategory = getSelectedCategory();
+    if (!selectedCategory) { alert('Please select a category.'); return; }
+    const root = zip.folder(assetType.value).folder(selectedCategory).folder(assetName.value);
+    const jsonName = assetType.value === 'Decals' ? 'decal.json' : 'surface.json';
+    root.file(jsonName, JSON.stringify(json, null, 2));
 
-  // package textures from previews
-  const baseBlob = await new Promise(r=> previewOriginal.toBlob(r,'image/png'));
-  root.file('_BaseColorMap.png', await baseBlob.arrayBuffer());
-  const normalBlob = await new Promise(r=> previewNormal.toBlob(r,'image/png'));
-  root.file('_NormalMap.png', await normalBlob.arrayBuffer());
-  const maskBlob = await new Promise(r=> previewMask.toBlob(r,'image/png'));
-  root.file('_MaskMap.png', await maskBlob.arrayBuffer());
-  const iconBlob = await new Promise(r=> previewIcon.toBlob(r,'image/png'));
-  root.file('icon.png', await iconBlob.arrayBuffer());
+    // package textures from previews
+    const baseBlob = await new Promise(r => previewOriginal.toBlob(r, 'image/png'));
+    root.file('_BaseColorMap.png', await baseBlob.arrayBuffer());
+    const normalBlob = await new Promise(r => previewNormal.toBlob(r, 'image/png'));
+    root.file('_NormalMap.png', await normalBlob.arrayBuffer());
+    const maskBlob = await new Promise(r => previewMask.toBlob(r, 'image/png'));
+    root.file('_MaskMap.png', await maskBlob.arrayBuffer());
+    const iconBlob = await new Promise(r => previewIcon.toBlob(r, 'image/png'));
+    root.file('icon.png', await iconBlob.arrayBuffer());
 
-  const blob = await zip.generateAsync({ type: 'blob' });
-  saveAs(blob, `${assetName.value}.zip`);
+    const blob = await zip.generateAsync({ type: 'blob' });
+    saveAs(blob, `${assetName.value}.zip`);
+  } catch (e) {
+    console.error('ZIP generation error:', e);
+    alert('Failed to generate zip.');
+  } finally {
+    generateBtn.disabled = false;
+    generateBtn.innerHTML = originalText;
+  }
 }); 

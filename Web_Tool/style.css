@@ -37,10 +37,21 @@ canvas {
 
 /* Category grid */
 #categoryFieldset {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  height: 10rem; /* adjust row count by height */
   gap: 0.5rem;
   margin: 1rem 0;
+}
+
+/* Ensure legend spans full width */
+#categoryFieldset legend {
+  flex: 1 1 100%;
+}
+
+#categoryFieldset label {
+  width: 25%;
 }
 
 /* Description under input */
@@ -81,3 +92,7 @@ canvas {
   padding: 0.75rem 1.5rem;
   margin-top: 1rem;
 } 
+
+#maskProfileFieldset {
+  grid-template-columns: repeat(2, 1fr);
+}
