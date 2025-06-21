@@ -7,28 +7,53 @@
 </head>
 <body>
   <h1>ExtraAssetsImporter Asset Generator</h1>
-  <form id="assetForm">
-    <label>Asset Type:
-      <select id="assetType">
-        <option value="Decals">Decal</option>
-        <option value="Surfaces">Surface</option>
-      </select>
-    </label>
-    <label>Category: <input type="text" id="category" required></label>
-    <label>Asset Name: <input type="text" id="assetName" required></label>
-    <label>UI Priority: <input type="number" id="uiPriority" value="0"></label>
-    <div id="surfaceOptions" style="display:none;">
-      <label>Roundness: <input type="number" id="roundness" step="0.01" value="0.5"></label>
-    </div>
-    <fieldset>
-      <legend>Textures</legend>
-      <label>Base Color Map: <input type="file" id="baseColor" accept="image/png" required></label>
-      <label>Normal Map: <input type="file" id="normalMap" accept="image/png"></label>
-      <label>Mask Map (optional): <input type="file" id="maskMap" accept="image/png"></label>
-      <label>Icon (optional): <input type="file" id="icon" accept="image/png"></label>
-    </fieldset>
-    <button type="button" id="generateBtn">Generate ZIP</button>
-  </form>
+  <div class="main">
+    <div class="input-area">
+      <form id="assetForm">
+        <label>Asset Type:
+          <select id="assetType">
+            <option value="Decals">Decal</option>
+            <option value="Surfaces">Surface</option>
+          </select><span class="info" title="Choose 'Decal' for decal.json assets or 'Surface' for surface.json assets">ℹ️</span>
+        </label>
+        <fieldset id="categoryFieldset">
+          <legend>Category <span class="info" title="Select the asset category/subfolder">ℹ️</span></legend>
+          <!-- radio buttons populated dynamically -->
+        </fieldset>
+        <label>Asset Name: <input type="text" id="assetName" required><span class="info" title="Folder name and displayed name for the asset">ℹ️</span></label>
+        <label>UI Priority: <input type="number" id="uiPriority" value="0"><span class="info" title="Lower numbers render earlier in the UI">ℹ️</span></label>
+        <div id="surfaceOptions" style="display:none;">
+          <label>Roundness: <input type="number" id="roundness" step="0.01" value="0.5"><span class="info" title="Surface edge roundness (0 to 1), higher is smoother">ℹ️</span></label>
+        </div>
+        <fieldset>
+          <legend>Textures</legend>
+          <label>Base Color Map: <input type="file" id="baseColor" accept="image/png" required><span class="info" title="PNG diffuse/base color texture">ℹ️</span></label>
+          <label>Normal Map: <input type="file" id="normalMap" accept="image/png"><span class="info" title="PNG normal map for surface detail (optional)">ℹ️</span></label>
+          <label>Mask Map (optional): <input type="file" id="maskMap" accept="image/png"><span class="info" title="PNG mask map (metallic, smoothness, etc); white mask auto-generated if omitted">ℹ️</span></label>
+          <label>Icon (optional): <input type="file" id="icon" accept="image/png"><span class="info" title="PNG icon for UI (max 128×128)">ℹ️</span></label>
+        </fieldset>
+        <fieldset>
+          <legend>Mask Generation</legend>
+          <label><input type="radio" name="maskOption" value="upload" checked> Upload my own mask <span class="info" title="Use your own mask file, or fallback to white if none provided.">ℹ️</span></label>
+          <label><input type="radio" name="maskOption" value="white"> Solid white mask (all visible) <span class="info" title="Everything fully opaque; no special effects.">ℹ️</span></label>
+          <label><input type="radio" name="maskOption" value="luminance"> Use image brightness for mask <span class="info" title="Darker areas become black, brighter areas white; smooth gradient.">ℹ️</span></label>
+          <label><input type="radio" name="maskOption" value="threshold"> Black & white silhouette <span class="info" title="Image converted to pure black or white at threshold.">ℹ️</span></label>
+          <div id="thresholdControl" style="display:none; margin-left:1.5rem;">
+            <label>Threshold: <input type="range" id="threshold" min="0" max="255" value="128"></label>
+          </div>
+        </fieldset>
+        <button type="button" id="generateBtn">Generate ZIP</button>
+      </form>
+    </div><!-- .input-area -->
+    <div class="preview-area">
+      <div id="previewArea">
+        <h2>Previews</h2>
+        <div class="preview-box"><h3>Original</h3><canvas id="previewOriginal"></canvas></div>
+        <div class="preview-box"><h3>Mask</h3><canvas id="previewMask"></canvas></div>
+        <div class="preview-box"><h3>Icon</h3><canvas id="previewIcon"></canvas></div>
+      </div>
+    </div><!-- .preview-area -->
+  </div><!-- .main -->
   <details>
     <summary>Advanced JSON</summary>
     <textarea id="jsonEditor" style="width:100%;height:300px;"></textarea>
