@@ -32,17 +32,14 @@ canvas {
 }
 
 /* Layout */
-.main { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+.main { display: grid; grid-template-columns: 1fr 0.8fr; gap: 2rem; }
 .input-area, .preview-area { }
 
 /* Category grid */
 #categoryFieldset {
   display: flex;
-  flex-direction: column;
-  flex-wrap: wrap;
-  height: 10rem; /* adjust row count by height */
+  flex-flow: wrap;
   gap: 0.5rem;
-  margin: 1rem 0;
 }
 
 /* Ensure legend spans full width */
@@ -95,4 +92,5 @@ canvas {
 
 #maskProfileFieldset {
   grid-template-columns: repeat(2, 1fr);
+  display: grid;
 }

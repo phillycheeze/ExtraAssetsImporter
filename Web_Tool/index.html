@@ -11,20 +11,20 @@
   <div class="main">
     <div class="input-area">
       <form id="assetForm">
-        <label>Asset Type:
+        <label>Asset Type:<span class="info" title="Choose 'Decal' for decal.json assets or 'Surface' for surface.json assets">ℹ️</span>
           <select id="assetType">
             <option value="Decals">Decal</option>
             <option value="Surfaces">Surface</option>
-          </select><span class="info" title="Choose 'Decal' for decal.json assets or 'Surface' for surface.json assets">ℹ️</span>
+          </select>
         </label>
         <fieldset id="categoryFieldset">
           <legend>Category <span class="info" title="Select the asset category/subfolder">ℹ️</span></legend>
           <!-- radio buttons populated dynamically -->
         </fieldset>
-        <label>Asset Name: <input type="text" id="assetName" required><span class="info" title="Folder name and displayed name for the asset">ℹ️</span></label>
-        <label>UI Priority: <input type="number" id="uiPriority" value="0"><span class="info" title="Lower numbers render earlier in the UI">ℹ️</span></label>
+        <label>Asset Name:<span class="info" title="Folder name and displayed name for the asset">ℹ️</span> <input type="text" id="assetName" required></label>
+        <label>UI Priority:<span class="info" title="Lower numbers render earlier in the UI">ℹ️</span> <input type="number" id="uiPriority" value="0"></label>
         <div id="surfaceOptions" style="display:none;">
-          <label>Roundness: <input type="number" id="roundness" step="0.01" value="0.5"><span class="info" title="Surface edge roundness (0 to 1), higher is smoother">ℹ️</span></label>
+          <label>Roundness:<span class="info" title="Surface edge roundness (0 to 1), higher is smoother">ℹ️</span> <input type="number" id="roundness" step="0.01" value="0.5"></label>
         </div>
         <fieldset>
           <legend>Upload Image</legend>
