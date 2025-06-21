@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ExtraAssetsImporter Web Tool</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>ExtraAssetsImporter Asset Generator</h1>
+  <form id="assetForm">
+    <label>Asset Type:
+      <select id="assetType">
+        <option value="Decals">Decal</option>
+        <option value="Surfaces">Surface</option>
+      </select>
+    </label>
+    <label>Category: <input type="text" id="category" required></label>
+    <label>Asset Name: <input type="text" id="assetName" required></label>
+    <label>UI Priority: <input type="number" id="uiPriority" value="0"></label>
+    <div id="surfaceOptions" style="display:none;">
+      <label>Roundness: <input type="number" id="roundness" step="0.01" value="0.5"></label>
+    </div>
+    <fieldset>
+      <legend>Textures</legend>
+      <label>Base Color Map: <input type="file" id="baseColor" accept="image/png" required></label>
+      <label>Normal Map: <input type="file" id="normalMap" accept="image/png"></label>
+      <label>Mask Map (optional): <input type="file" id="maskMap" accept="image/png"></label>
+      <label>Icon (optional): <input type="file" id="icon" accept="image/png"></label>
+    </fieldset>
+    <button type="button" id="generateBtn">Generate ZIP</button>
+  </form>
+  <details>
+    <summary>Advanced JSON</summary>
+    <textarea id="jsonEditor" style="width:100%;height:300px;"></textarea>
+  </details>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html> 

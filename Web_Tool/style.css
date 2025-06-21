@@ -1,0 +1,5 @@
+body { font-family: sans-serif; padding: 1rem; }
+label { display: block; margin: 0.5rem 0; }
+fieldset { margin: 1rem 0; }
+#generateBtn { margin-top: 1rem; }
+textarea { font-family: monospace; } 
