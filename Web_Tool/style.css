@@ -16,16 +16,34 @@ textarea { font-family: monospace; }
   text-align: center;
 }
 #previewArea {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
   margin-top: 1rem;
   border-top: 1px solid #ccc;
   padding-top: 1rem;
 }
 canvas {
-  max-width: 200px;
-  max-height: 200px;
+  width: 100%;
+  height: auto;
   border: 1px solid #ddd;
 }
 
 /* Layout */
 .main { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
-.input-area, .preview-area { } 
+.input-area, .preview-area { }
+
+/* Category grid */
+#categoryFieldset {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+/* Description under input */
+.description {
+  font-size: 0.9rem;
+  color: #555;
+  margin: 0.5rem 0 0;
+} 

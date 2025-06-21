@@ -83,17 +83,21 @@ const defaultTemplates = {
 
 // Elements
 const assetType = document.getElementById('assetType');
-// Category radios populated dynamically; use getSelectedCategory()
 const assetName = document.getElementById('assetName');
 const uiPriority = document.getElementById('uiPriority');
 const roundness = document.getElementById('roundness');
 const jsonEditor = document.getElementById('jsonEditor');
 const generateBtn = document.getElementById('generateBtn');
 const baseInput = document.getElementById('baseColor');
-const normalInput = document.getElementById('normalMap');
-const maskInput = document.getElementById('maskMap');
-const iconInput = document.getElementById('icon');
 const surfaceOptions = document.getElementById('surfaceOptions');
+// Mask profile & normal generation controls
+const maskProfileOptions = document.getElementsByName('maskProfile');
+const generateNormalCheckbox = document.getElementById('generateNormal');
+// Preview canvases
+const previewOriginal = document.getElementById('previewOriginal');
+const previewNormal = document.getElementById('previewNormal');
+const previewMask = document.getElementById('previewMask');
+const previewIcon = document.getElementById('previewIcon');
 
 // Supported categories for each asset type
 const categoriesByType = {
@@ -153,14 +157,6 @@ function fileToDataURL(file) {
   });
 }
 
-// Elements for mask generation and preview
-const maskOptions = document.getElementsByName('maskOption');
-const thresholdControl = document.getElementById('thresholdControl');
-const thresholdInput = document.getElementById('threshold');
-const previewOriginal = document.getElementById('previewOriginal');
-const previewMask = document.getElementById('previewMask');
-const previewIcon = document.getElementById('previewIcon');
-
 // Update previews when inputs change
 async function updatePreviews() {
   if (!baseInput.files[0]) return;
@@ -169,21 +165,60 @@ async function updatePreviews() {
   img.src = dataURL;
   await img.decode();
   const w = img.width, h = img.height;
-  // original
+  // Original (Base Color)
   previewOriginal.width = w; previewOriginal.height = h;
   const ctxO = previewOriginal.getContext('2d');
   ctxO.clearRect(0,0,w,h);
   ctxO.drawImage(img,0,0);
+  // Normal Map (if enabled)
+  previewNormal.width = w; previewNormal.height = h;
+  const ctxN = previewNormal.getContext('2d');
+  ctxN.clearRect(0,0,w,h);
+  if (generateNormalCheckbox.checked) {
+    // generate normal map via Sobel on brightness
+    const hCanvas = document.createElement('canvas'); hCanvas.width=w; hCanvas.height=h;
+    const hCtx = hCanvas.getContext('2d');
+    hCtx.drawImage(img,0,0);
+    const hData = hCtx.getImageData(0,0,w,h).data;
+    const nImg = hCtx.createImageData(w,h);
+    // kernels
+    const sobelX = [-1,0,1,-2,0,2,-1,0,1];
+    const sobelY = [1,2,1,0,0,0,-1,-2,-1];
+    for (let y=0; y<h; y++) {
+      for (let x=0; x<w; x++) {
+        let gx=0, gy=0;
+        for (let ky=-1; ky<=1; ky++) {
+          for (let kx=-1; kx<=1; kx++) {
+            const ix = Math.min(w-1, Math.max(0, x+kx));
+            const iy = Math.min(h-1, Math.max(0, y+ky));
+            const idx = (iy*w + ix)*4;
+            const lum = 0.2126*hData[idx] + 0.7152*hData[idx+1] + 0.0722*hData[idx+2];
+            const wIdx = (ky+1)*3 + (kx+1);
+            gx += sobelX[wIdx]*lum;
+            gy += sobelY[wIdx]*lum;
+          }
+        }
+        // normal vector
+        let nx = -gx/255, ny = -gy/255, nz = 1;
+        const len = Math.sqrt(nx*nx+ny*ny+nz*nz);
+        nx/=len; ny/=len; nz/=len;
+        const px = ((nx+1)*0.5)*255;
+        const py = ((ny+1)*0.5)*255;
+        const pz = ((nz+1)*0.5)*255;
+        const oidx = (y*w + x)*4;
+        nImg.data[oidx] = px;
+        nImg.data[oidx+1] = py;
+        nImg.data[oidx+2] = pz;
+        nImg.data[oidx+3] = 255;
+      }
+    }
+    ctxN.putImageData(nImg,0,0);
+  }
   // mask
-  const mCanvas = document.createElement('canvas');
-  mCanvas.width = w; mCanvas.height = h;
+  const mCanvas = document.createElement('canvas'); mCanvas.width=w; mCanvas.height=h;
   const ctxM = mCanvas.getContext('2d');
-  const selected = Array.from(maskOptions).find(r=>r.checked).value;
-  if (selected === 'upload' && maskInput.files[0]) {
-    const maskURL = await fileToDataURL(maskInput.files[0]);
-    const mImg = new Image(); mImg.src = maskURL; await mImg.decode();
-    ctxM.drawImage(mImg,0,0,w,h);
-  } else if (selected === 'luminance') {
+  const selected = Array.from(maskProfileOptions).find(r=>r.checked).value;
+  if (selected === 'natural') {
     ctxM.drawImage(img,0,0);
     const imgData = ctxM.getImageData(0,0,w,h);
     const data = imgData.data;
@@ -192,48 +227,52 @@ async function updatePreviews() {
       data[i]=data[i+1]=data[i+2]=lum;
     }
     ctxM.putImageData(imgData,0,0);
-  } else if (selected === 'threshold') {
+  } else if (selected === 'silhouette') {
     ctxM.drawImage(img,0,0);
-    const imgData = ctxM.getImageData(0,0,w,h);
-    const data = imgData.data;
-    const thresh = parseInt(thresholdInput.value,10);
-    for (let i=0;i<data.length;i+=4){
-      const lum = 0.2126*data[i]+0.7152*data[i+1]+0.0722*data[i+2];
-      const v = lum>=thresh?255:0;
-      data[i]=data[i+1]=data[i+2]=v;
+    const imgData2 = ctxM.getImageData(0,0,w,h);
+    const data2 = imgData2.data;
+    for (let i=0;i<data2.length;i+=4){
+      const lum = 0.2126*data2[i]+0.7152*data2[i+1]+0.0722*data2[i+2];
+      const v = lum>=128?255:0;
+      data2[i]=data2[i+1]=data2[i+2]=v;
     }
-    ctxM.putImageData(imgData,0,0);
-  } else {
-    ctxM.fillStyle='white'; ctxM.fillRect(0,0,w,h);
+    ctxM.putImageData(imgData2,0,0);
+  } else if (selected === 'reflective') {
+    ctxM.drawImage(img,0,0);
+    const imgData3 = ctxM.getImageData(0,0,w,h);
+    const data3 = imgData3.data;
+    for (let i=0;i<data3.length;i+=4){
+      const lum = 0.2126*data3[i]+0.7152*data3[i+1]+0.0722*data3[i+2];
+      const v = Math.min(255, (lum-128)*1.5+128);
+      data3[i]=data3[i+1]=data3[i+2]=v;
+    }
+    ctxM.putImageData(imgData3,0,0);
+  } else if (selected === 'matte') {
+    ctxM.drawImage(img,0,0);
+    const imgData4 = ctxM.getImageData(0,0,w,h);
+    const data4 = imgData4.data;
+    for (let i=0;i<data4.length;i+=4){
+      const lum = 0.2126*data4[i]+0.7152*data4[i+1]+0.0722*data4[i+2];
+      const v = lum*0.5+64;
+      data4[i]=data4[i+1]=data4[i+2]=v;
+    }
+    ctxM.putImageData(imgData4,0,0);
   }
   previewMask.width=w; previewMask.height=h;
   const ctxPM = previewMask.getContext('2d'); ctxPM.clearRect(0,0,w,h); ctxPM.drawImage(mCanvas,0,0);
-  // icon
+  // Icon preview
   previewIcon.width=128; previewIcon.height=128;
-  const ctxI = previewIcon.getContext('2d'); ctxI.clearRect(0,0,128,128);
-  let iconImg = new Image();
-  if (iconInput.files[0]) {
-    iconImg.src = await fileToDataURL(iconInput.files[0]);
-    await iconImg.decode();
-    ctxI.drawImage(iconImg,0,0,128,128);
-  } else {
-    const scale = 128/Math.max(w,h);
-    const iw = w*scale, ih = h*scale;
-    ctxI.fillStyle='transparent'; ctxI.fillRect(0,0,128,128);
-    ctxI.drawImage(img,(128-iw)/2,(128-ih)/2,iw,ih);
-  }
+  const ctxI = previewIcon.getContext('2d');
+  ctxI.clearRect(0,0,128,128);
+  const scaleI = 128/Math.max(w,h);
+  const iw = w*scaleI, ih = h*scaleI;
+  ctxI.drawImage(img,(128-iw)/2,(128-ih)/2,iw,ih);
 }
 
 // bind events for previews
 baseInput.addEventListener('change', updatePreviews);
-maskInput.addEventListener('change', updatePreviews);
-iconInput.addEventListener('change', updatePreviews);
-thresholdInput.addEventListener('input', updatePreviews);
-maskOptions.forEach(r=>r.addEventListener('change', e=>{
-  thresholdControl.style.display = e.target.value==='threshold'?'block':'none';
-  maskInput.disabled = e.target.value!=='upload';
-  updatePreviews();
-}));
+maskProfileOptions.forEach(r=>r.addEventListener('change', updatePreviews));
+generateNormalCheckbox.addEventListener('change', updatePreviews);
 
 // Main generation
 generateBtn.addEventListener('click', async () => {
@@ -241,55 +280,22 @@ generateBtn.addEventListener('click', async () => {
   try { json = JSON.parse(jsonEditor.value); }
   catch (e) { alert('Invalid JSON'); return; }
 
+  const zip = new JSZip();
   const selectedCategory = getSelectedCategory();
   if (!selectedCategory) { alert('Please select a category.'); return; }
   const root = zip.folder(assetType.value).folder(selectedCategory).folder(assetName.value);
   const jsonName = assetType.value === 'Decals' ? 'decal.json' : 'surface.json';
   root.file(jsonName, JSON.stringify(json, null, 2));
 
-  // Helper to add file
-  async function addFile(input, name) {
-    if (!input.files[0]) return false;
-    const data = await input.files[0].arrayBuffer();
-    root.file(name, data);
-    return true;
-  }
-
-  // add base & normal maps
-  await addFile(baseInput, '_BaseColorMap.png');
-  await addFile(normalInput, '_NormalMap.png');
-  // mask map: upload or generate per selection
-  const maskOpt = Array.from(maskOptions).find(r=>r.checked).value;
-  if (maskOpt === 'upload') {
-    if (!await addFile(maskInput, '_MaskMap.png')) {
-      // fallback solid white
-      const mCanvas = document.createElement('canvas');
-      mCanvas.width = previewMask.width; mCanvas.height = previewMask.height;
-      const ctxM = mCanvas.getContext('2d');
-      ctxM.fillStyle = 'white'; ctxM.fillRect(0,0,mCanvas.width,mCanvas.height);
-      const blobM = await new Promise(r=>mCanvas.toBlob(r,'image/png'));
-      root.file('_MaskMap.png', await blobM.arrayBuffer());
-    }
-  } else {
-    // generate from preview
-    const mCanvas = document.createElement('canvas');
-    mCanvas.width = previewMask.width; mCanvas.height = previewMask.height;
-    const ctxM = mCanvas.getContext('2d');
-    ctxM.drawImage(previewMask,0,0);
-    const blobM = await new Promise(r=>mCanvas.toBlob(r,'image/png'));
-    root.file('_MaskMap.png', await blobM.arrayBuffer());
-  }
-  // icon: upload or generate
-  if (iconInput.files[0]) {
-    await addFile(iconInput, 'icon.png');
-  } else {
-    const iCanvas = document.createElement('canvas');
-    iCanvas.width = 128; iCanvas.height = 128;
-    const ctxI = iCanvas.getContext('2d');
-    ctxI.drawImage(previewIcon,0,0);
-    const blobI = await new Promise(r=>iCanvas.toBlob(r,'image/png'));
-    root.file('icon.png', await blobI.arrayBuffer());
-  }
+  // package textures from previews
+  const baseBlob = await new Promise(r=> previewOriginal.toBlob(r,'image/png'));
+  root.file('_BaseColorMap.png', await baseBlob.arrayBuffer());
+  const normalBlob = await new Promise(r=> previewNormal.toBlob(r,'image/png'));
+  root.file('_NormalMap.png', await normalBlob.arrayBuffer());
+  const maskBlob = await new Promise(r=> previewMask.toBlob(r,'image/png'));
+  root.file('_MaskMap.png', await maskBlob.arrayBuffer());
+  const iconBlob = await new Promise(r=> previewIcon.toBlob(r,'image/png'));
+  root.file('icon.png', await iconBlob.arrayBuffer());
 
   const blob = await zip.generateAsync({ type: 'blob' });
   saveAs(blob, `${assetName.value}.zip`);
