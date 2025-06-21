@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>ExtraAssetsImporter Web Tool</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://code.iconify.design/2/2.2.1/iconify.min.js"></script>
 </head>
 <body>
   <h1>ExtraAssetsImporter Asset Generator</h1>
@@ -57,11 +58,14 @@
     <div class="preview-area">
       <div id="previewArea">
         <h2>Previews</h2>
-        <div class="preview-box"><h3>Original (Base Color)</h3><canvas id="previewOriginal"></canvas></div>
-        <div class="preview-box"><h3>Normal Map</h3><canvas id="previewNormal"></canvas></div>
-        <div class="preview-box"><h3>Mask Map</h3><canvas id="previewMask"></canvas></div>
-        <div class="preview-box"><h3>Icon</h3><canvas id="previewIcon"></canvas></div>
-        <button type="button" id="generateBtn">Download ZIP</button>
+        <!-- First row: Base Color and Icon -->
+        <div class="preview-box"><h3>Original (Base Color)</h3><canvas id="previewOriginal"></canvas><div class="loader"></div></div>
+        <div class="preview-box"><h3>Icon (128×128)</h3><canvas id="previewIcon" width="128" height="128"></canvas><div class="loader"></div></div>
+        <!-- Second row: Normal Map and Mask Map -->
+        <div class="preview-box"><h3>Normal Map</h3><canvas id="previewNormal"></canvas><div class="loader"></div></div>
+        <div class="preview-box"><h3>Mask Map</h3><canvas id="previewMask"></canvas><div class="loader"></div></div>
+        <!-- Download button -->
+        <div class="preview-actions"><button type="button" id="generateBtn">Download ZIP</button></div>
       </div>
     </div><!-- .preview-area -->
   </div><!-- .main -->

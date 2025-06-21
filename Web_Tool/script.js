@@ -105,13 +105,46 @@ const categoriesByType = {
   Surfaces: ["Agriculture","Concrete","Forestry","Grass","Landfill","Oil","Ore","Pavement","Sand","Tiles","Wood"]
 };
 
+// Icon map for each category (uses Iconify)
+const iconMap = {
+  Alphabet: 'mdi:format-letter-case',
+  Beach: 'mdi:beach',
+  Graffiti: 'mdi:brush',
+  Ground: 'mdi:terrain',
+  Industry: 'mdi:factory',
+  Leaf: 'mdi:leaf',
+  Misc: 'mdi:dots-horizontal',
+  Numbers: 'mdi:numeric',
+  Parking: 'mdi:parking',
+  Puddles: 'mdi:water',
+  RoadAssets: 'mdi:road-variant',
+  RoadMarkings: 'mdi:sign-direction',
+  Stains: 'mdi:water-off',
+  Trash: 'mdi:trash-can',
+  WallDecor: 'mdi:wall',
+  Agriculture: 'mdi:agriculture',
+  Concrete: 'mdi:warehouse',
+  Forestry: 'mdi:forest',
+  Grass: 'mdi:grass',
+  Landfill: 'mdi:delete-empty',
+  Oil: 'mdi:oil-lamp',
+  Ore: 'mdi:mine',
+  Pavement: 'mdi:road',
+  Sand: 'mdi:beach',
+  Tiles: 'mdi:grid',
+  Wood: 'mdi:wood'
+};
+
 // Populate category radio buttons
 const categoryFieldset = document.getElementById('categoryFieldset');
 function populateCategoryOptions(type) {
   categoryFieldset.innerHTML = '<legend>Category <span class="info" title="Select the asset category/subfolder">ℹ️</span>';
   categoriesByType[type].forEach((cat, i) => {
+    const iconId = iconMap[cat] || 'mdi:help-circle';
     const label = document.createElement('label');
-    label.innerHTML = `<input type="radio" name="category" value="${cat}"${i===0?' checked':''}> ${cat}`;
+    label.innerHTML =
+      `<input type="radio" name="category" value="${cat}"${i===0?' checked':''}> ` +
+      `<span class="iconify" data-icon="${iconId}" data-inline="false" style="vertical-align:middle;margin-right:4px;"></span> ${cat}`;
     categoryFieldset.appendChild(label);
   });
 }
@@ -159,7 +192,12 @@ function fileToDataURL(file) {
 
 // Update previews when inputs change
 async function updatePreviews() {
-  if (!baseInput.files[0]) return;
+  // show loaders
+  document.querySelectorAll('.loader').forEach(l=>{ l.style.display='flex'; });
+  if (!baseInput.files[0]) {
+    document.querySelectorAll('.loader').forEach(l=>{ l.style.display='none'; });
+    return;
+  }
   const dataURL = await fileToDataURL(baseInput.files[0]);
   const img = new Image();
   img.src = dataURL;
@@ -267,6 +305,8 @@ async function updatePreviews() {
   const scaleI = 128/Math.max(w,h);
   const iw = w*scaleI, ih = h*scaleI;
   ctxI.drawImage(img,(128-iw)/2,(128-ih)/2,iw,ih);
+  // hide loaders
+  document.querySelectorAll('.loader').forEach(l=>{ l.style.display='none'; });
 }
 
 // bind events for previews

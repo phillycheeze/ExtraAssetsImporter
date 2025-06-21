@@ -14,10 +14,12 @@ textarea { font-family: monospace; }
   display: inline-block;
   margin: 0.5rem;
   text-align: center;
+  position: relative;
 }
 #previewArea {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
+  grid-auto-rows: auto;
   gap: 1rem;
   margin-top: 1rem;
   border-top: 1px solid #ccc;
@@ -46,4 +48,36 @@ canvas {
   font-size: 0.9rem;
   color: #555;
   margin: 0.5rem 0 0;
+}
+
+/* Preview box overlay loader */
+.loader {
+  display: none;
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.7);
+  align-items: center;
+  justify-content: center;
+}
+.loader::after {
+  content: '';
+  width: 24px; height: 24px;
+  border: 4px solid #ccc;
+  border-top: 4px solid #333;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Preview actions (button) */
+.preview-actions {
+  grid-column: 1 / -1;
+  text-align: center;
+}
+.preview-actions button {
+  width: auto;
+  padding: 0.75rem 1.5rem;
+  margin-top: 1rem;
 } 
