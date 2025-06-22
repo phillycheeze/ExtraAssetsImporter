@@ -1,83 +1,327 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <title>ExtraAssetsImporter Web Tool</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://code.iconify.design/2/2.2.1/iconify.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/iconify/3.1.1/iconify.min.js"></script>
+  <style>
+    /* Dark-mode number spinner inversion */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      filter: invert(1);
+    }
+    /* Hide Firefox default spinner */
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+    dd {
+      font-weight: 200;
+    }
+  </style>
 </head>
-<body>
-  <h1>ExtraAssetsImporter Asset Generator</h1>
-  <div class="main">
-    <div class="input-area">
-      <form id="assetForm">
-        <label>Asset Type:<span class="info" title="Choose 'Decal' for decal.json assets or 'Surface' for surface.json assets">ℹ️</span>
-          <select id="assetType">
-            <option value="Decals">Decal</option>
-            <option value="Surfaces">Surface</option>
-          </select>
-        </label>
+<body class="p-6 font-mono bg-gray-900 text-gray-100">
+  <div>
+    <!-- Input area -->
+    <aside class="fixed inset-y-0 left-0 w-[32rem] bg-gray-800 rounded-r-lg shadow-lg overflow-y-auto">
+      <div class="flex w-full bg-gray-700 border-b border-gray-600 justify-center py-2">
+        <span class="text-2xl font-bold my-0">EAI Asset Generator</span>
+      </div>
+      <form id="assetForm" class="space-y-6 p-6 text-gray-100">
+        <div class="flex flex-wrap gap-8">
+          <label class="flex flex-col space-y-1 flex-1">
+            <span>Asset Name:</span>
+            <input type="text" id="assetName" class="border border-gray-600 bg-gray-700 text-gray-100 rounded px-3 py-1.5 w-full mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+          </label>
+          <label class="flex flex-col space-y-1 w-1/3">
+            <span>Asset Type:</span>
+            <select id="assetType" class="border border-gray-600 bg-gray-700 text-gray-100 rounded px-3 py-2 w-full mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="Decals">Decal</option>
+              <option value="Surfaces">Surface</option>
+            </select>
+          </label>
+        </div>
+        <fieldset class="border border-gray-600 rounded p-4">
+          <legend>Upload Images</legend>
+          <label for="baseColor" class="inline-block bg-gray-700 border border-gray-600 text-gray-100 px-4 py-2 rounded cursor-pointer hover:bg-gray-600">
+            Select PNG Files
+          </label>
+          <input type="file" id="baseColor" multiple class="sr-only" accept="image/png" required>
+        </fieldset>
         <fieldset id="categoryFieldset">
-          <legend>Category <span class="info" title="Select the asset category/subfolder">ℹ️</span></legend>
-          <!-- radio buttons populated dynamically -->
+          <legend>Category</legend>
+          <div class="flex flex-wrap gap-4 mt-2"></div>
         </fieldset>
-        <div>
-        <label style="display: inline-block; margin-right: 2rem;">Asset Name:<span class="info" title="Folder name and displayed name for the asset">ℹ️</span> <input type="text" id="assetName" required></label>
-        <label style="display: inline-block;">UI Priority:<span class="info" title="Lower numbers render earlier in the UI">ℹ️</span> <input type="number" id="uiPriority" value="0"></label>
+        <div id="surfaceOptions" class="hidden">
+          <label class="flex flex-col space-y-1">
+            <span>Roundness:</span>
+            <input type="range" id="roundness" min="0" max="1" step="0.01" value="0.5" class="w-full h-2 mt-1 appearance-none bg-gray-700 rounded-lg accent-blue-500 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </label>
         </div>
-        <div id="surfaceOptions" style="display:none;">
-          <label>Roundness:<span class="info" title="Surface edge roundness (0 to 1), higher is smoother">ℹ️</span> <input type="number" id="roundness" step="0.01" value="0.5"></label>
-        </div>
-        <fieldset>
-          <legend>Upload Image</legend>
-          <label>Your Image: <input type="file" id="baseColor" accept="image/png" required><span class="info" title="Upload one image; we'll auto-generate all game textures">ℹ️</span>
-            <p class="description">Your photo will produce the base color, normal, mask, and icon textures.<p>
-          </label>
+        <fieldset id="maskProfileFieldset" class="border border-gray-600 rounded p-4">
+          <legend class="text-base font-medium">Mask Style</legend>
+          <div class="flex flex-wrap gap-4 mt-2">
+            <label class="block w-[50%]">
+              <input type="radio" name="maskProfile" value="natural" class="sr-only peer" checked>
+              <div class="flex items-center p-3 border rounded-lg text-sm transition-colors peer-checked:border-blue-500 peer-checked:bg-gray-700 peer-checked:text-gray-100">
+                Natural Detail
+              </div>
+            </label>
+            <label class="block w-[45%]">
+              <input type="radio" name="maskProfile" value="silhouette" class="sr-only peer">
+              <div class="flex items-center p-3 border rounded-lg text-sm transition-colors peer-checked:border-blue-500 peer-checked:bg-gray-700 peer-checked:text-gray-100">
+                Bold Silhouette
+              </div>
+            </label>
+            <label class="block w-[50%]">
+              <input type="radio" name="maskProfile" value="reflective" class="sr-only peer">
+              <div class="flex items-center p-3 border rounded-lg text-sm transition-colors peer-checked:border-blue-500 peer-checked:bg-gray-700 peer-checked:text-gray-100">
+                Reflective Highlights
+              </div>
+            </label>
+              <label class="block w-[45%]">
+              <input type="radio" name="maskProfile" value="matte" class="sr-only peer">
+              <div class="flex items-center p-3  border rounded-lg text-sm transition-colors peer-checked:border-blue-500 peer-checked:bg-gray-700 peer-checked:text-gray-100">
+                Subtle Matte
+              </div>
+            </label>
+          </div>
         </fieldset>
-        <fieldset id="maskProfileFieldset">
-          <legend>Mask Style</legend>
-          <label><input type="radio" name="maskProfile" value="natural" checked> Natural Detail
-            <p class="description">Preserves original shadows and highlights for a realistic finish.</p>
-          </label>
-          <label><input type="radio" name="maskProfile" value="silhouette"> Bold Silhouette
-            <p class="description">Converts image to clear black-and-white shapes; great for crisp outlines.</p>
-          </label>
-          <label><input type="radio" name="maskProfile" value="reflective"> Reflective Highlights
-            <p class="description">Enhances bright areas for shiny or wet surfaces like metal or water.</p>
-          </label>
-          <label><input type="radio" name="maskProfile" value="matte"> Subtle Matte
-            <p class="description">Soft gray mask for low-contrast, muted surfaces like dirt or concrete.</p>
-          </label>
-        </fieldset>
-        <fieldset id="normalFieldset">
-          <legend>Surface Detail</legend>
-          <label><input type="checkbox" id="generateNormal" checked> Add 3D Lighting
-            <p class="description">Simulates bumps and reflections for more depth and realism.</p>
+        <fieldset id="normalFieldset" class="border border-gray-600 rounded p-4">
+          <label class="flex items-center">
+            <input type="checkbox" id="generateNormal" class="form-checkbox text-blue-600 mr-2"> Add 3D Lighting
           </label>
         </fieldset>
       </form>
-    </div><!-- .input-area -->
-    
-    <div class="preview-area">
-      <h2 class="margin-top: 0;">Previews</h2>
-      <div id="previewArea">
-        <!-- First row: Base Color and Icon -->
-        <div class="preview-box"><h3>Original (Base Color)</h3><canvas id="previewOriginal"></canvas><div class="loader"></div></div>
-        <div class="preview-box" style="height:128px; width:128px;"><h3>Icon (128×128)</h3><canvas id="previewIcon" width="128" height="128"></canvas><div class="loader"></div></div>
-        <!-- Second row: Normal Map and Mask Map -->
-        <div class="preview-box"><h3>Normal Map</h3><canvas id="previewNormal"></canvas><div class="loader"></div></div>
-        <div class="preview-box"><h3>Mask Map</h3><canvas id="previewMask"></canvas><div class="loader"></div></div>
-        <!-- Download button -->
-        <div class="preview-actions"><button type="button" id="generateBtn">Download ZIP</button></div>
+    </aside>
+    <!-- Preview area -->
+    <section class="ml-[32rem] space-y-2">
+      <button id="previewInfoBtn" type="button" class="text-gray-500 hover:text-gray-700 text-sm inline-flex items-center gap-2">
+        <span class="iconify text-xl" data-icon="mdi:information-outline" data-inline="false"></span>
+        Documentation
+      </button>
+      <div class="flex items-center">
+        <h2 class="text-2xl font-semibold mt-0">Previews</h2>
       </div>
-    </div><!-- .preview-area -->
-  </div><!-- .main -->
-  <details>
-    <summary>Advanced JSON</summary>
-    <textarea id="jsonEditor" style="width:100%;height:300px;"></textarea>
+      <div id="previewContainer" class="space-y-4">
+        <!-- Header row -->
+        <div class="grid grid-cols-[128px,1fr,1fr,1fr] gap-4 font-semibold">
+          <div>Icon</div>
+          <div>Original</div>
+          <div>Mask Map</div>
+          <div>Normal Map</div>
+        </div>
+        <!-- JS-generated preview rows here -->
+      </div>
+      <div class="preview-actions flex text-center pt-4">
+        <button type="button" id="generateBtn" disabled class="mx-auto bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:cursor-not-allowed">Download ZIP</button>
+        <button type="button" id="saveToDirBtn" disabled class="mx-auto bg-transparent border border-green-600 text-green-600 px-6 py-2 rounded hover:bg-green-600 hover:text-white disabled:cursor-not-allowed">Install for me</button>
+      </div>
+    </section>
+  </div>
+  <details class="mt-6 hidden">
+    <summary class="font-medium">Advanced JSON</summary>
+    <textarea id="jsonEditor" class="border border-gray-600 bg-gray-700 text-gray-100 rounded px-3 py-2 w-full h-72 mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
   </details>
+
+  <!-- Preview Info Overlay -->
+  <div id="previewInfoOverlay" class="fixed ml-[32rem] inset-0 bg-gray-900 bg-opacity-95 backdrop-blur-md p-6 overflow-y-auto hidden z-50">
+    <div class="max-w-4xl ml-2">
+      <div class="flex justify-between items-center">
+        <h3 class="text-2xl font-bold">Tool Help</h3>
+        <button id="closePreviewInfo" type="button" class="text-gray-300 hover:text-white">
+          <span class="iconify text-2xl" data-icon="mdi:close" data-inline="false"></span>
+        </button>
+      </div>
+      <hr class="my-4" />
+      <p class="mb-2">Each uploaded image is turned into four previews:</p>
+      <ul class="list-disc pl-6 space-y-1 mb-4">
+        <li><strong>Icon:</strong> A 128×128 graphic used in the UI.</li>
+        <li><strong>Original:</strong> Shows your upload unchanged.</li>
+        <li><strong>Mask Map:</strong> Packs four effects into one PNG—red for metallic, green for ambient occlusion, blue for detail, alpha for smoothness.</li>
+        <li><strong>Normal Map:</strong> An optional lighting map that makes the surface look bumpy and 3D. Not needed for most decals.</li>
+      </ul>
+      <h4 class="text-xl font-semibold mb-2">Form Fields</h4>
+      <dl class="space-y-4">
+        <dt class="text-gray-100 font-semibold">Asset Name</dt>
+        <dd class="ml-4 text-gray-400 font-thin">
+          Enter a unique, alphanumeric name for your asset. This name is used to
+          create the output folder and JSON file. Avoid spaces or special characters.
+        </dd>
+        <dt class="text-gray-100 font-semibold">Asset Type</dt>
+        <dd class="ml-4 text-gray-400 font-thin">
+          Choose "Decal" for overlay graphics (like stickers, markings, murals, etc.) or
+          "Surface" for tileable textures (like concrete, grass, etc.).
+        </dd>
+        <dt class="text-gray-100 font-semibold">Upload Images</dt>
+        <dd class="ml-4 text-gray-400 font-thin">
+          Click here to select one or more PNG files from your computer. Each
+          image will be processed to generate all previews and exported data.
+        </dd>
+        <dt class="text-gray-100 font-semibold">Category</dt>
+        <dd class="ml-4 text-gray-400 font-thin">
+          Select the folder grouping for your asset (e.g. "Graffiti," "Concrete").
+          This organizes assets into subdirectories in the final ZIP.
+        </dd>
+        <dt class="text-gray-100 font-semibold">Roundness (Surfaces only)</dt>
+        <dd class="ml-4 text-gray-400 font-thin">Adjust how soft or angular tile edges appear (0 = sharp corners; 1 = smooth curve).</dd>
+        <dt class="text-gray-100 font-semibold">Mask Style</dt>
+        <dd class="ml-4 text-gray-400 font-thin">
+          Creates a mask that packs metallic, ambient occlusion, detail, and smoothness into one image: defining how your asset reacts to light and material properties in the game. Options:
+          <ul class="list-disc pl-6 space-y-1 mb-4">
+            <li><strong class="text-blue-500">Natural Detail:</strong> Preserves every shade from your image, creating smooth, realistic gradients in the mask.</li>
+            <li><strong class="text-blue-500">Bold Silhouette:</strong> Converts mid-tones to pure black or white for sharp, graphic edges.</li>
+            <li><strong class="text-blue-500">Reflective Highlights:</strong> Amplifies brighter areas to highlight shiny details in the mask.</li>
+            <li><strong class="text-blue-500">Subtle Matte:</strong> Dims overall contrast, giving a soft, muted mask effect.</li>
+          </ul>
+        </dd>
+        <dt class="text-gray-100 font-semibold">Add 3D Lighting</dt>
+        <dd class="ml-4 text-gray-400 font-thin">
+          When checked, generates a normal map by detecting edges in your image via
+          a Sobel filter. The normal map simulates surface bumps and lighting,
+          enabling 3D shading effects in game engines. Not needed for most decals.
+        </dd>
+      </dl>
+    </div>
+  </div>
+  <!-- Cache instructions popover -->
+  <div id="cacheInstructions" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-gray-800 text-white p-6 rounded-lg w-96">
+      <h3 class="text-lg font-semibold mb-2">Select Game Cache Folder</h3>
+      <p class="mb-4">Please navigate to the following path in the folder picker:</p>
+      <div class="bg-gray-700 p-2 rounded mb-4 font-mono text-sm break-words" id="cachePathDisplay"></div>
+      <div class="flex justify-end space-x-2">
+        <button id="copyCachePathBtn" class="bg-blue-600 px-3 py-1 rounded hover:bg-blue-700">Copy Path</button>
+        <button id="openCachePickerBtn" class="bg-green-600 px-3 py-1 rounded hover:bg-green-700">Open Folder Picker</button>
+        <button id="cancelCacheBtn" class="bg-red-600 px-3 py-1 rounded hover:bg-red-700">Cancel</button>
+      </div>
+    </div>
+  </div>
+  <!-- Unsupported browser popover -->
+  <div id="unsupportedInstructions" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-gray-800 text-white p-6 rounded-lg w-80">
+      <h3 class="text-lg font-semibold mb-2">Feature Not Supported</h3>
+      <p>Your browser does not support the File System Access API. Please use a Chromium-based browser like Chrome or Edge.</p>
+      <div class="flex justify-end mt-4">
+        <button id="closeUnsupportedBtn" class="bg-red-600 px-3 py-1 rounded hover:bg-red-700">Close</button>
+      </div>
+    </div>
+  </div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <script src="script.js"></script>
+  <script>
+    // Test File System Access API: save a test file to a chosen folder
+    async function saveZipViaDirectoryPicker(blob, fileName) {
+      if ('showDirectoryPicker' in window) {
+        const dirHandle = await window.showDirectoryPicker();
+        const fileHandle = await dirHandle.getFileHandle(fileName, { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        alert('Saved to: ' + dirHandle.name);
+      } else {
+        alert('File System Access API not supported.');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Show a popover to guide user to select the hidden game cache path
+      const CACHE_TARGET_PATH = '%APPDATA%\\LocalLow\\Colossal Order\\Cities Skylines II\\Mods';
+      const cacheInstructions = document.getElementById('cacheInstructions');
+      const cachePathDisplay = document.getElementById('cachePathDisplay');
+      const copyCachePathBtn = document.getElementById('copyCachePathBtn');
+      const openCachePickerBtn = document.getElementById('openCachePickerBtn');
+      const cancelCacheBtn = document.getElementById('cancelCacheBtn');
+      const unsupportedInstructions = document.getElementById('unsupportedInstructions');
+      const closeUnsupportedBtn = document.getElementById('closeUnsupportedBtn');
+      cachePathDisplay.textContent = CACHE_TARGET_PATH;
+      const saveDirBtn = document.getElementById('saveToDirBtn');
+      saveDirBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if ('showDirectoryPicker' in window) {
+          cacheInstructions.classList.remove('hidden');
+        } else {
+          unsupportedInstructions.classList.remove('hidden');
+        }
+      });
+      copyCachePathBtn.addEventListener('click', async () => {
+        await navigator.clipboard.writeText(CACHE_TARGET_PATH);
+        copyCachePathBtn.textContent = 'Copied!';
+        setTimeout(() => { copyCachePathBtn.textContent = 'Copy Path'; }, 2000);
+      });
+      cancelCacheBtn.addEventListener('click', () => {
+        cacheInstructions.classList.add('hidden');
+      });
+      openCachePickerBtn.addEventListener('click', async () => {
+        cacheInstructions.classList.add('hidden');
+        try {
+          const modsDir = await window.showDirectoryPicker({ mode: 'readwrite', startIn: 'documents' });
+          await installToMods(modsDir);
+        } catch (err) {
+          console.error(err);
+        }
+      });
+      closeUnsupportedBtn.addEventListener('click', () => {
+        unsupportedInstructions.classList.add('hidden');
+      });
+
+      // Disable buttons until both asset name and files are provided
+      const assetNameInput = document.getElementById('assetName');
+      const baseInputEl = document.getElementById('baseColor');
+      const downloadBtnEl = document.getElementById('generateBtn');
+      const installBtnEl = document.getElementById('saveToDirBtn');
+      function updateActionButtons() {
+        const hasName = assetNameInput.value.trim() !== '';
+        const hasFiles = baseInputEl.files && baseInputEl.files.length > 0;
+        downloadBtnEl.disabled = !(hasName && hasFiles);
+        installBtnEl.disabled = !(hasName && hasFiles);
+      }
+      assetNameInput.addEventListener('input', updateActionButtons);
+      baseInputEl.addEventListener('change', updateActionButtons);
+      updateActionButtons();
+    });
+
+    // Helper: write generated asset files directly into the selected Mods folder
+    async function installToMods(modsDirHandle) {
+      const assetName = document.getElementById('assetName').value.trim();
+      if (!assetName) { alert('Please enter an asset name before installing.'); return; }
+      const installFolderName = `EAI-${assetName}`;
+      const rootHandle = await modsDirHandle.getDirectoryHandle(installFolderName, { create: true });
+      const assetType = document.getElementById('assetType').value;
+      const category = document.querySelector('input[name="category"]:checked').value;
+      const roundness = parseFloat(document.getElementById('roundness').value);
+      const builder = new AssetJsonBuilder(assetType, category, roundness);
+      const rows = Array.from(document.getElementById('previewContainer').children).slice(1);
+      const files = Array.from(document.getElementById('baseColor').files);
+      const jsonName = assetType === 'Decals' ? 'decal.json' : 'surface.json';
+      for (let i = 0; i < files.length; i++) {
+        const nameNoExt = files[i].name.replace(/\.png$/i, '');
+        const typeHandle = await rootHandle.getDirectoryHandle(assetType, { create: true });
+        const catHandle = await typeHandle.getDirectoryHandle(category, { create: true });
+        const subHandle = await catHandle.getDirectoryHandle(nameNoExt, { create: true });
+        // JSON file
+        const canvases = rows[i].querySelectorAll('canvas');
+        const origCanvas = canvases[1];
+        const widthPx = origCanvas.width;
+        const heightPx = origCanvas.height;
+        const jsonObj = builder.build(i, widthPx, heightPx);
+        const fileHandle = await subHandle.getFileHandle(jsonName, { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(JSON.stringify(jsonObj, null, 2));
+        await writable.close();
+        // Image files
+        const suffixes = ['icon.png', '_BaseColorMap.png', '_MaskMap.png', '_NormalMap.png'];
+        for (let j = 0; j < canvases.length; j++) {
+          const blob = await new Promise(r => canvases[j].toBlob(r, 'image/png'));
+          const imgHandle = await subHandle.getFileHandle(suffixes[j], { create: true });
+          const writer = await imgHandle.createWritable();
+          await writer.write(blob);
+          await writer.close();
+        }
+      }
+      alert('Installed assets to: ' + installFolderName);
+    }
+  </script>
 </body>
 </html> 
